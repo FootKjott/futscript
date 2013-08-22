@@ -152,4 +152,16 @@ class Keyboard
   end
 end
 
-print "hi"
+class Monitor
+  @@CreateDC = Win32API.new('gdi32', 'CreateDC', ['S', 'S', 'S', 'I'], 'I')  
+  @@GetDeviceCaps = Win32API.new('gdi32', "GetDeviceCaps", ["I","I"], "I")
+  @@monitors_hdc = @@CreateDC.call("DISPLAY", nil, nil, 0)
+  @@screens_width = @@GetDeviceCaps.call(@@monitors_hdc, 8)
+  @@screens_height = @@GetDeviceCaps.call(@@monitors_hdc, 10)
+  def self.capture_all_screens
+    puts @@screens_width
+    puts @@screens_height
+  end
+end
+
+Monitor.capture_all_screens
