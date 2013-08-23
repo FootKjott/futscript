@@ -3,6 +3,8 @@ require "Win32API"
 MessageBox = Win32API.new('user32', 'MessageBox', ['L', 'P', 'P', 'L'], 'I')  
 
 Point = Struct.new(:x, :y)
+Color = Struct.new(:r, :g, :b)
+
 $randy = Random.new
 
 class Mouse
@@ -152,16 +154,75 @@ class Keyboard
   end
 end
 
-class Monitor
-  @@CreateDC = Win32API.new('gdi32', 'CreateDC', ['S', 'S', 'S', 'I'], 'I')  
-  @@GetDeviceCaps = Win32API.new('gdi32', "GetDeviceCaps", ["I","I"], "I")
-  @@monitors_hdc = @@CreateDC.call("DISPLAY", nil, nil, 0)
-  @@screens_width = @@GetDeviceCaps.call(@@monitors_hdc, 8)
-  @@screens_height = @@GetDeviceCaps.call(@@monitors_hdc, 10)
-  def self.capture_all_screens
-    puts @@screens_width
-    puts @@screens_height
+class Image
+  def initialize width, height, bmi, data
+    @width = width
+    @height = height
+    @bmi = bmi
+    @data = data
+  end
+
+  def get_pixel x, y
+    y = @height - y - 1
+    raise "Invalid coordinates" unless (0..@width).include?(x) && (0..@height).include?(y)
+    colorref = @data[(y * @width + x) * 3, 3].unpack('CCC')
+    return Color.new(colorref[2], colorref[1], colorref[0])
   end
 end
 
-Monitor.capture_all_screens
+class Monitor
+  @@CreateDC = Win32API.new('gdi32', 'CreateDC', ['S', 'S', 'S', 'I'], 'I')  
+  @@CreateCompatibleDC = Win32API.new('gdi32', "CreateCompatibleDC", ["I"], "I")
+  @@CreateCompatibleBitmap = Win32API.new('gdi32', "CreateCompatibleBitmap", ["I", "I", "I"], "I")
+  @@SelectObject = Win32API.new('gdi32', "SelectObject", ["I", "I"], "I")
+  @@GetObject = Win32API.new('gdi32', 'GetObject', ["I", "I","P"] , "I")
+  @@BitBlt = Win32API.new('gdi32', "BitBlt", ["I", "I", "I", "I", "I", "I", "I", "I", "I"], "I")
+  @@DeleteDC = Win32API.new('gdi32', "DeleteDC", ["I"], "I")
+  @@GetPixel = Win32API.new('gdi32', 'GetPixel', ["I", "I", "I"], "I")
+  @@GetDIBits = Win32API.new('gdi32', 'GetDIBits', ["I", "I", "I", "I", "P", "P" , "I"], "I")
+  @@DeleteObject = Win32API.new('gdi32', 'DeleteObject', ["I"], "I")
+  @@GetSystemMetrics = Win32API.new('user32', 'GetSystemMetrics', ["I"], "I")
+
+  @@hdc = @@CreateDC.call("DISPLAY", nil, nil, 0)
+  @@screen_width = @@GetSystemMetrics.call(78)
+  @@screen_height = @@GetSystemMetrics.call(79)
+  @@screen_offset_x = @@GetSystemMetrics.call(76)
+  @@screen_offset_y = @@GetSystemMetrics.call(77)
+
+  def self.capture_all_screens
+    unless @@hdc == 0
+      capture_screen_area 0, 0, @@screen_width, @@screen_height
+    end
+  end
+
+  def self.capture_screen_area x, y, width, height
+    hdc_dest = @@CreateCompatibleDC.call(@@hdc)
+    h_bitmap = @@CreateCompatibleBitmap.call(@@hdc.to_i, width, height)
+    @@SelectObject.call(hdc_dest, h_bitmap)
+    @@BitBlt.call(hdc_dest, 0, 0, width, height, @@hdc, x, y, 0x40000000 | 0x00CC0020)
+    bmi = [40, width, height, 1, 24].pack("LllSS").ljust(44, "\0")
+    @@GetDIBits.call(hdc_dest, h_bitmap, 0, height, nil, bmi, 0x00) #Sets BITMAPINFO bmi
+    bmiarr = bmi.unpack("LllSSLLllLLCCCC")
+    bmpbuffer = "\0" * bmiarr[6]
+    @@GetDIBits.call(hdc_dest, h_bitmap, 0, height, bmpbuffer, bmi, 0x00) #Fills bmpbuffer
+    @@DeleteDC.call(hdc_dest)
+    @@DeleteObject.call(h_bitmap)
+    return Image.new(width, height, bmiarr, bmpbuffer)
+  end
+
+  def self.get_pixel x, y
+    colorref = @@GetPixel.call(@@hdc, x, y)
+    return Color.new(colorref % 256, (colorref / 256) % 256, (colorref / 65536) % 256)
+  end
+end
+
+
+GetSystemMetrics = Win32API.new('user32', 'GetSystemMetrics', ["I"], "I")
+puts "SM_XVIRTUALSCREEN " << GetSystemMetrics.call(76).to_s
+puts "SM_YVIRTUALSCREEN " << GetSystemMetrics.call(77).to_s
+puts "SM_CXVIRTUALSCREEN " << GetSystemMetrics.call(78).to_s
+puts "SM_CYVIRTUALSCREEN " << GetSystemMetrics.call(79).to_s
+
+img = Monitor.capture_screen_area 0, 0, 2880, 900
+puts img.get_pixel(0, 0).inspect
+puts Monitor.get_pixel(-1440,0).inspect
