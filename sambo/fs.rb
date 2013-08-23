@@ -14,19 +14,19 @@ class Mouse
 
   @@mouse_events = { left: { down: 0x02, up: 0x04 }, right: { down: 0x08, up: 0x10 } }
   
-
   def self.cursor_pos
     str = [0, 0].pack('ll')
     @@GetCursorPos.call(str)
     arr = str.unpack('ll')
-    Point.new(arr[0], arr[1])
+    Point.new(arr[0] - Monitor.screen_offset_x, arr[1] -  Monitor.screen_offset_y)
   end
 
   def self.cursor_pos=new_pos
-    @@SetCursorPos.call(new_pos[:x], new_pos[:y]) == 0
+    @@SetCursorPos.call(Monitor.screen_offset_x + new_pos[:x], Monitor.screen_offset_y + new_pos[:y])
   end
 
-  def self.move_to destination, speed = 3, limit = 10000
+  def self.move_to x, y, speed = 3, limit = 10000
+    destination = Point.new(x, y)
     maxrandy = $randy.rand($randy.rand(50...80)...$randy.rand(120...150))
     until (current_pos = cursor_pos) == destination do 
       xdif = (current_pos.x - destination.x).abs + 1
@@ -48,9 +48,7 @@ class Mouse
 
   def self.move_from xdif, ydif, speed = 3, limit = 10000
     pos = cursor_pos
-    pos.x += xdif
-    pos.y += ydif
-    move_to pos, speed, 10000
+    move_to pos.x + xdif, pos.y + ydif, speed, 10000
     return pos
   end
 
@@ -175,7 +173,6 @@ class Monitor
   @@CreateCompatibleDC = Win32API.new('gdi32', "CreateCompatibleDC", ["I"], "I")
   @@CreateCompatibleBitmap = Win32API.new('gdi32', "CreateCompatibleBitmap", ["I", "I", "I"], "I")
   @@SelectObject = Win32API.new('gdi32', "SelectObject", ["I", "I"], "I")
-  @@GetObject = Win32API.new('gdi32', 'GetObject', ["I", "I","P"] , "I")
   @@BitBlt = Win32API.new('gdi32', "BitBlt", ["I", "I", "I", "I", "I", "I", "I", "I", "I"], "I")
   @@DeleteDC = Win32API.new('gdi32', "DeleteDC", ["I"], "I")
   @@GetPixel = Win32API.new('gdi32', 'GetPixel', ["I", "I", "I"], "I")
@@ -184,22 +181,28 @@ class Monitor
   @@GetSystemMetrics = Win32API.new('user32', 'GetSystemMetrics', ["I"], "I")
 
   @@hdc = @@CreateDC.call("DISPLAY", nil, nil, 0)
-  @@screen_width = @@GetSystemMetrics.call(78)
-  @@screen_height = @@GetSystemMetrics.call(79)
   @@screen_offset_x = @@GetSystemMetrics.call(76)
   @@screen_offset_y = @@GetSystemMetrics.call(77)
+  @@screen_width = @@GetSystemMetrics.call(78)
+  @@screen_height = @@GetSystemMetrics.call(79)
 
   def self.capture_all_screens
-    unless @@hdc == 0
-      capture_screen_area 0, 0, @@screen_width, @@screen_height
-    end
+    capture_screen_area 0, 0, @@screen_width, @@screen_height
+  end
+
+  def self.screen_offset_x
+    return @@screen_offset_x 
+  end
+
+  def self.screen_offset_y
+    return @@screen_offset_y 
   end
 
   def self.capture_screen_area x, y, width, height
     hdc_dest = @@CreateCompatibleDC.call(@@hdc)
     h_bitmap = @@CreateCompatibleBitmap.call(@@hdc.to_i, width, height)
     @@SelectObject.call(hdc_dest, h_bitmap)
-    @@BitBlt.call(hdc_dest, 0, 0, width, height, @@hdc, x, y, 0x40000000 | 0x00CC0020)
+    @@BitBlt.call(hdc_dest, 0, 0, width, height, @@hdc, x + @@screen_offset_x, y + @@screen_offset_y, 0x40000000 | 0x00CC0020)
     bmi = [40, width, height, 1, 24].pack("LllSS").ljust(44, "\0")
     @@GetDIBits.call(hdc_dest, h_bitmap, 0, height, nil, bmi, 0x00) #Sets BITMAPINFO bmi
     bmiarr = bmi.unpack("LllSSLLllLLCCCC")
@@ -211,18 +214,7 @@ class Monitor
   end
 
   def self.get_pixel x, y
-    colorref = @@GetPixel.call(@@hdc, x, y)
+    colorref = @@GetPixel.call(@@hdc, x + @@screen_offset_x, y + @@screen_offset_y)
     return Color.new(colorref % 256, (colorref / 256) % 256, (colorref / 65536) % 256)
   end
 end
-
-
-GetSystemMetrics = Win32API.new('user32', 'GetSystemMetrics', ["I"], "I")
-puts "SM_XVIRTUALSCREEN " << GetSystemMetrics.call(76).to_s
-puts "SM_YVIRTUALSCREEN " << GetSystemMetrics.call(77).to_s
-puts "SM_CXVIRTUALSCREEN " << GetSystemMetrics.call(78).to_s
-puts "SM_CYVIRTUALSCREEN " << GetSystemMetrics.call(79).to_s
-
-img = Monitor.capture_screen_area 0, 0, 2880, 900
-puts img.get_pixel(0, 0).inspect
-puts Monitor.get_pixel(-1440,0).inspect
