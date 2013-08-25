@@ -1,8 +1,10 @@
 require "Win32API"
-%w(version image keyboard mouse screen).each do |dep|
+%w(common version image keyboard mouse screen).each do |dep|
   require "futscript/#{dep}"
 end
 
 module Futscript
-  
+  Point = Struct.new(:x, :y)
+
+  $randy = Random.new
 end
