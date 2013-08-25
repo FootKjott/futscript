@@ -4,7 +4,7 @@ module Futscript
     @@GetCursorPos = Win32API.new('user32', 'GetCursorPos', ['P'], 'I')
     @@mouse_event = Win32API.new('user32', 'mouse_event', ['I', 'I', 'I', 'I'], 'V')  
 
-    @@mouse_events = { left: { down: 0x02, up: 0x04 }, right: { down: 0x08, up: 0x10 } }
+    @@mouse_events = { left: { down: 0x02, up: 0x04 }, right: { down: 0x08, up: 0x10 }, middle: { down: 0x20, up: 0x40 } }
     
     def self.cursor_pos
       str = [0, 0].pack('ll')
@@ -62,6 +62,8 @@ module Futscript
     end
 
     def self.button key, action
+      raise "Invalid key" if @@mouse_events[key].nil?
+      raise "Invalid action" if @@mouse_events[key][action].nil?
       current_pos = cursor_pos
       @@mouse_event.call(@@mouse_events[key][action], current_pos.x, current_pos.y, 0, 0)
     end
