@@ -4,7 +4,5 @@ require "Win32API"
 end
 
 module Futscript
-  Point = Struct.new(:x, :y)
-
-  $randy = Random.new
+  
 end

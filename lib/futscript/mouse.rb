@@ -6,8 +6,6 @@ module Futscript
 
     @@mouse_events = { left: { down: 0x02, up: 0x04 }, right: { down: 0x08, up: 0x10 } }
     
-    @@randy = Random.new
-
     def self.cursor_pos
       str = [0, 0].pack('ll')
       @@GetCursorPos.call(str)
@@ -25,24 +23,24 @@ module Futscript
 
       raise "Invalid coordinates" unless (0...Screen.width).include?(x) && (0...Screen.height).include?(y)
       destination = Point.new(x, y)
-      maxrandy = @@randy.rand(@@randy.rand(50...80)...@@randy.rand(120...150))
+      maxrandy = Randy.rand(Randy.rand(50...80)...Randy.rand(120...150))
       until (current_pos = cursor_pos) == destination do 
         xdif = (current_pos.x - destination.x).abs + 1
         ydif = (current_pos.y - destination.y).abs + 1
-        if @@randy.rand(0...maxrandy) <= 100 * xdif / ydif
+        if Randy.rand(0...maxrandy) <= 100 * xdif / ydif
           current_pos.x += (destination.x - current_pos.x) <=> 0
         end
-        if @@randy.rand(0...maxrandy) <= 100 * ydif / xdif
+        if Randy.rand(0...maxrandy) <= 100 * ydif / xdif
           current_pos.y += (destination.y - current_pos.y) <=> 0
         end
         self.cursor_pos = current_pos
         sleep 0.1**speed 
       end
     end
-
+#
     def self.move_from xdif, ydif, speed=3
-      xdif = @@randy.rand(xdif) if xdif.is_a? Range
-      ydif = @@randy.rand(ydif) if ydif.is_a? Range
+      xdif = Randy.rand(xdif) if xdif.is_a? Range
+      ydif = Randy.rand(ydif) if ydif.is_a? Range
       pos = cursor_pos
       move_to pos.x + xdif, pos.y + ydif, speed
       return pos
