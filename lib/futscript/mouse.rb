@@ -37,7 +37,7 @@ module Futscript
         sleep 0.1**speed 
       end
     end
-#
+
     def self.move_from xdif, ydif, speed=3
       xdif = Randy.rand(xdif) if xdif.is_a? Range
       ydif = Randy.rand(ydif) if ydif.is_a? Range
@@ -55,6 +55,7 @@ module Futscript
     end
 
     def self.click ms=0, key=:left
+      ms = Randy.rand(ms) if ms.is_a? Range
       button key, :down
       sleep ms * 0.001
       button key, :up
