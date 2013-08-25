@@ -67,11 +67,5 @@ module Futscript
       current_pos = cursor_pos
       @@mouse_event.call(@@mouse_events[key][action], current_pos.x, current_pos.y, 0, 0)
     end
-
-    def self.drag x, y, speed=3, key=:left
-      button key, :down
-      move_to x, y, speed
-      button key, :up
-    end
   end
 end
