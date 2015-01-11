@@ -1,14 +1,22 @@
+require 'futscript/keyboard_ext/keyboard_ext'
+
 module Futscript
   class Keyboard
-    @@keybd_event = Win32API.new('user32', 'keybd_event', ['I', 'I', 'I', 'I'], 'V')  
     @@keybd_events = { down: 0, up: 2 }
-    @@VkKeyScan = Win32API.new('user32', 'VkKeyScan', ['I'], 'I')
     @@keys = Hash.new do |hash, key|
+      key = key.to_s
+      keyresult = -1
       if key.to_s.length == 1
-        keyresult = @@VkKeyScan.call(key.to_s.ord)
-        raise "Invalid character key #{key}" if keyresult == -1
-        hash[key] = keyresult
+        keyresult = self.char_to_key(key.to_s.ord)
+      else
+        match = /F([\d]+)/.match(key)
+        unless match.nil?
+          f_num = match[1].to_i
+          keyresult = f_num + 0x6F if (1..12).include?(f_num)
+        end
       end
+      raise "Invalid character key #{key}" if keyresult == -1
+      hash[key] = keyresult
     end
 
     @@keys["BACK"] = 0x08
@@ -73,7 +81,7 @@ module Futscript
       end
       raise "Invalid key_code value" if key_code.nil?
       raise "Invalid key action type" if @@keybd_events[action].nil?
-      @@keybd_event.call(key_code, 0x45, @@keybd_events[action], 0)
+      self.event(key_code, @@keybd_events[action])
     end
   end
 end
