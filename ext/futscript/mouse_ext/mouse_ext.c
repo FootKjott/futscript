@@ -13,7 +13,7 @@ VALUE mouse_event_wrapper(VALUE self, VALUE dwFlags, VALUE dx, VALUE dy, VALUE d
 
 void Init_mouse_ext() {
 	FutScript = rb_define_module("Futscript");
-	Mouse = rb_define_class_under(FutScript, "Mouse", rb_cObject);
+	Mouse = rb_define_class_under(Futscript, "Mouse", rb_cObject);
 	rb_define_module_function(Mouse, "set_position", mouse_set_position, 2);
 	rb_define_module_function(Mouse, "position", mouse_get_position, 0);
 	rb_define_module_function(Mouse, "move_relative", mouse_move_relative, 2);
