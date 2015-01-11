@@ -1,3 +1,5 @@
+require 'futscript/mouse_ext/mouse_ext'
+
 module Futscript
   class Mouse
     @@SetCursorPos = Win32API.new('user32', 'SetCursorPos', ['L', 'L'], 'I')  

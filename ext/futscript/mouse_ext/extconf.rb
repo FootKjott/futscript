@@ -1,0 +1,12 @@
+# Loads mkmf which is used to make makefiles for Ruby extensions
+require 'mkmf'
+require 'devkit.rb'
+
+# Give it a name
+extension_name = 'mouse_ext'
+
+# The destination
+dir_config(extension_name)
+
+# Do the work
+create_makefile(extension_name)
