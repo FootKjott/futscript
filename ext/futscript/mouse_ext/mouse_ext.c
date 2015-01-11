@@ -37,7 +37,6 @@ VALUE mouse_move_relative(VALUE self, VALUE x, VALUE y) {
 }
 
 VALUE mouse_event_wrapper(VALUE self, VALUE dwFlags, VALUE dx, VALUE dy, VALUE dwData) {
-	mouse_event(NUM2INT(dwFlags), NUM2INT(dx), NUM2INT(dy), NUM2INT(dwData), NUM2INT(0));
+	mouse_event(NUM2INT(dwFlags), NUM2INT(dx), NUM2INT(dy), NUM2INT(dwData), 0);
 	return Qnil;
 }
-
