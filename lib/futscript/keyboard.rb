@@ -37,6 +37,26 @@ module Futscript
 
     attr_accessor :keys
 
+    @@hotkeys = Hash.new
+    Thread.new do 
+      Keyboard.hook Proc.new { |key, action|
+        hook_used = false
+        if action == 0x0100
+          @@hotkeys.each do |hkey, reaction|
+            if key % 256 == hkey % 256
+              reaction.call
+              hook_used = true
+            end
+          end
+        end
+        hook_used
+      }
+    end
+
+    def self.hotkeys
+      @@hotkeys
+    end
+
     def self.type str, speed=1.2
       shift_down = false
       str.chars.each do |char|
@@ -82,6 +102,10 @@ module Futscript
       raise "Invalid key_code value" if key_code.nil?
       raise "Invalid key action type" if @@keybd_events[action].nil?
       self.event(key_code, @@keybd_events[action])
+    end
+
+    def self.hotkey key_code, &block
+      @@hotkeys[@@keys[key_code]] = block
     end
   end
 end
