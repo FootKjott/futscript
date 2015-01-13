@@ -49,7 +49,7 @@ module Futscript
       @@GetDIBits.call(hdc_dest, h_bitmap, 0, height, bmpbuffer, bmi, 0x00) #Fills bmpbuffer
       @@DeleteDC.call(hdc_dest)
       @@DeleteObject.call(h_bitmap)
-      return Image.new(bmiarr, bmpbuffer)
+      return Image.from_bmi_data(bmiarr, bmpbuffer)
     end
 
     def self.get_pixel x, y
@@ -70,6 +70,10 @@ module Futscript
 
     def self.wait_for_px_not x, y, color, tolerance=5, timeout=100, ms_per_screenshot=50
       wait_for_px x, y, color, tolerance, timeout, ms_per_screenshot, false
+    end
+
+    def self.method_missing(m, *args, &block)
+      capture_all_screens.send(m, *args)
     end
   end
 end

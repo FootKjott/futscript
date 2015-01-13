@@ -2,11 +2,15 @@ module Futscript
   class Image
     attr_accessor :width, :height, :size
 
-    def initialize bmi, bitmap_data
-      @width = bmi[1]
-      @height = bmi[2]
-      @size = bmi[6]
-      @data = bitmap_data
+    def initialize width, height, size, data
+      @height = height
+      @width = width
+      @size = size
+      @data = data
+    end
+
+    def self.from_bmi_data bmi, bitmap_data
+      Image.new(bmi[1], bmi[2], bmi[6], bitmap_data)
     end
 
     def get_pixel x, y
