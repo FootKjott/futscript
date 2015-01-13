@@ -11,6 +11,7 @@ void Init_keyboard_ext();
 VALUE keybd_event_wrapper(VALUE self, VALUE bVk, VALUE dwFlags);
 VALUE vk_key_scan_wrapper(VALUE self, VALUE str_with_ch);
 VALUE set_key_hook(VALUE self, VALUE block);
+VALUE unhook_key_hook(VALUE self);
 
 LRESULT CALLBACK KeyHookProc(int nCode, WPARAM wParam, LPARAM lParam);
 void MessageLoop();
@@ -21,6 +22,7 @@ void Init_keyboard_ext() {
 	rb_define_module_function(Keyboard, "event", keybd_event_wrapper, 2);
 	rb_define_module_function(Keyboard, "char_to_key", vk_key_scan_wrapper, 1);
 	rb_define_module_function(Keyboard, "hook", set_key_hook, 1);
+	rb_define_module_function(Keyboard, "unhook", unhook_key_hook, 0);
 }
 
 LRESULT CALLBACK KeyHookProc(int nCode, WPARAM wParam, LPARAM lParam) {
@@ -49,6 +51,11 @@ VALUE set_key_hook(VALUE self, VALUE block) {
 	}
 	rb_raise(rb_eArgError, "a block is required to set a key hook");
 	return Qfalse;
+}
+
+VALUE unhook_key_hook(VALUE self) {
+	UnhookWindowsHookEx(KeyHook);
+	return Qnil;
 }
 
 VALUE keybd_event_wrapper(VALUE self, VALUE bVk, VALUE dwFlags) {

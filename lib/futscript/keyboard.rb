@@ -38,20 +38,8 @@ module Futscript
     attr_accessor :keys
 
     @@hotkeys = Hash.new
-    Thread.new do 
-      Keyboard.hook Proc.new { |key, action|
-        hook_used = false
-        if action == 0x0100
-          @@hotkeys.each do |hkey, reaction|
-            if key % 256 == hkey % 256
-              reaction.call
-              hook_used = true
-            end
-          end
-        end
-        hook_used
-      }
-    end
+
+    @@hotkey_thread = nil
 
     def self.hotkeys
       @@hotkeys
@@ -104,7 +92,27 @@ module Futscript
       self.event(key_code, @@keybd_events[action])
     end
 
+    def self.start_message_loop
+      return unless @@hotkey_thread.nil?
+      ObjectSpace.define_finalizer( self, proc { unhook } )
+      Thread.new do 
+        Keyboard.hook Proc.new { |key, action|
+          hook_used = false
+          if action == 0x0100
+            @@hotkeys.each do |hkey, reaction|
+              if key % 256 == hkey % 256
+                reaction.call
+                hook_used = true
+              end
+            end
+          end
+          hook_used
+        }
+      end
+    end
+
     def self.hotkey key_code, &block
+      start_message_loop
       @@hotkeys[@@keys[key_code]] = block
     end
   end
