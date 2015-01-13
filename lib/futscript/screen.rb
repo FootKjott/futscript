@@ -59,6 +59,7 @@ module Futscript
     end
 
     def self.wait_for_px x, y, color, tolerance=5, timeout=100, ms_per_screenshot=50, is=true
+      color = Color.parse color
       start_time = Time.now.to_i
       until is == color.is_tolerant_of(get_pixel(x, y), tolerance) do
         return false if Time.now.to_i - start_time >= timeout

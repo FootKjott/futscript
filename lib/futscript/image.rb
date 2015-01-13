@@ -16,6 +16,15 @@ module Futscript
       return Color.new(colorref[2], colorref[1], colorref[0])
     end
 
+    def scan color, tolerance=0
+      color = Color.parse color
+      (0...@width).each do |x|
+        (0...@height).each do |y|
+          return [x, y] if color.is_tolerant_of(get_pixel(x, y), tolerance)
+        end
+      end
+    end
+
     def destroy
       @width = 0
       @height = 0
