@@ -1,3 +1,5 @@
+require 'futscript/screen_ext/screen_ext'
+
 module Futscript
   class Screen
     @@CreateDC = Win32API.new('gdi32', 'CreateDC', ['S', 'S', 'S', 'I'], 'I')  
@@ -6,7 +8,6 @@ module Futscript
     @@SelectObject = Win32API.new('gdi32', "SelectObject", ["I", "I"], "I")
     @@BitBlt = Win32API.new('gdi32', "BitBlt", ["I", "I", "I", "I", "I", "I", "I", "I", "I"], "I")
     @@DeleteDC = Win32API.new('gdi32', "DeleteDC", ["I"], "I")
-    @@GetPixel = Win32API.new('gdi32', 'GetPixel', ["I", "I", "I"], "I")
     @@GetDIBits = Win32API.new('gdi32', 'GetDIBits', ["I", "I", "I", "I", "P", "P" , "I"], "I")
     @@DeleteObject = Win32API.new('gdi32', 'DeleteObject', ["I"], "I")
     @@GetSystemMetrics = Win32API.new('user32', 'GetSystemMetrics', ["I"], "I")
@@ -54,7 +55,7 @@ module Futscript
 
     def self.get_pixel x, y
       raise "Invalid coordinates" unless (0...@@width).include?(x) && (0...@@height).include?(y)
-      colorref = @@GetPixel.call(@@hdc, x + @@offset_x, y + @@offset_y)
+      colorref = get_pixel_ext x, y
       return Color.new(colorref % 256, (colorref / 256) % 256, (colorref / 65536) % 256)
     end
 
