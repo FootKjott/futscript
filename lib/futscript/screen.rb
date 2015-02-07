@@ -60,7 +60,9 @@ module Futscript
     end
 
     def self.wait_for_px x, y, color, tolerance=5, timeout=100, ms_per_screenshot=50, is=true
+      puts color.inspect
       color = Color.parse color
+      puts color.inspect
       start_time = Time.now.to_i
       until is == color.is_tolerant_of(get_pixel(x, y), tolerance) do
         return false if Time.now.to_i - start_time >= timeout
@@ -73,7 +75,12 @@ module Futscript
       wait_for_px x, y, color, tolerance, timeout, ms_per_screenshot, false
     end
 
+    def self.lel
+      puts 'lel'
+    end
+
     def self.method_missing(m, *args, &block)
+      puts 'missing'
       capture_all_screens.send(m, *args)
     end
   end
