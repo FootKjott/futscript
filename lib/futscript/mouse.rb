@@ -5,7 +5,16 @@ module Futscript
     @@mouse_events = { left: { down: 0x02, up: 0x04 }, right: { down: 0x08, up: 0x10 }, middle: { down: 0x20, up: 0x40 } }
 
     def self.position=new_pos
-      self.set_position new_pos[0], new_pos[1]
+      set_position new_pos[0], new_pos[1]
+    end
+
+    def self.position
+      raw = raw_position
+      [ raw[0] - Screen.offset_x, raw[1] - Screen.offset_y ]
+    end
+
+    def self.set_position x, y
+      set_raw_position x + Screen.offset_x, y + Screen.offset_y
     end
 
     def self.left_click ms=0
@@ -26,7 +35,7 @@ module Futscript
     def self.button key, action
       raise "Invalid key" if @@mouse_events[key].nil?
       raise "Invalid action" if @@mouse_events[key][action].nil?
-      current_pos = self.position
+      current_pos = self.raw_position
       self.event(@@mouse_events[key][action], current_pos[0], current_pos[1], 0)
     end
   end

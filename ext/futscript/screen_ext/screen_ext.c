@@ -20,12 +20,12 @@ void Init_screen_ext() {
 	user_hdc = CreateDC("DISPLAY", NULL, NULL, NULL);
 
 	rb_define_module_function(Screen, "get_pixel_ext", get_pixel_wrapper, 2);
-	rb_define_module_function(Screen, "capture_area", screen_capture_area, 4);
+	//rb_define_module_function(Screen, "capture_area", screen_capture_area, 4);
 	
-	rb_cv_set(Screen, "@@offset_x", GetSystemMetrics(76));
-	rb_cv_set(Screen, "@@offset_y", GetSystemMetrics(77));
-	rb_cv_set(Screen, "@@width", GetSystemMetrics(78));
-	rb_cv_set(Screen, "@@height", GetSystemMetrics(79));
+	rb_cv_set(Screen, "@@offset_x", INT2NUM(GetSystemMetrics(76)));
+	rb_cv_set(Screen, "@@offset_y", INT2NUM(GetSystemMetrics(77)));
+	rb_cv_set(Screen, "@@width", INT2NUM(GetSystemMetrics(78)));
+	rb_cv_set(Screen, "@@height", INT2NUM(GetSystemMetrics(79)));
 }
 
 VALUE get_pixel_wrapper(VALUE self, VALUE x, VALUE y) {
@@ -68,5 +68,3 @@ VALUE screen_capture_area(VALUE self, VALUE v_x, VALUE v_y, VALUE v_width, VALUE
 	argv[3] = rb_str_new(data, bmi.bmiHeader.biSizeImage);
 	return rb_class_new_instance(4, argv, Image);
 }
-
-
