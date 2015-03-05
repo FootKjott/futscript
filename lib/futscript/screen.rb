@@ -2,43 +2,60 @@ require 'futscript/screen_ext/screen_ext'
 
 module Futscript
   class Screen
+    @@defaults = { tolerance: 5, timeout: 10000, period: 50 }
+
+    def self.defaults
+      @@defaults
+    end
+
     def self.offset_x
-      return @@offset_x
+      @@offset_x
     end
 
     def self.offset_y
-      return @@offset_y
+      @@offset_y
     end
 
     def self.width
-      return @@width
+      @@width
     end
 
     def self.height
-      return @@height
+      @@height
     end
 
     def self.capture
       capture_area 0, 0, @@width, @@height
     end
 
-    def self.get_pixel x, y
+    def self.pixel x, y=nil
+      if y.nil?
+        y = x[1]
+        x = x[0]
+      end
       raise "Invalid coordinates" unless (0...@@width).include?(x) && (0...@@height).include?(y)
       return get_pixel_ext x, y
     end
 
-    def self.wait_for_px x, y, color, tolerance=5, timeout=100, ms_per_screenshot=50, is=true
+    def self.wait_for xy, color, options={}, is=true
+      x = xy[0]
+      y = xy[1]
+
+      @@defaults.each do |key, value|
+        options[key] = value unless options.has_key? key
+      end
+
       color = Color.parse color
-      start_time = Time.now.to_i
-      until is == color.is_tolerant_of(get_pixel(x, y), tolerance) do
-        return false if Time.now.to_i - start_time >= timeout
-        sleep(ms_per_screenshot * 0.001)
+      start_time = Time.now
+      until is == color.tolerant_of?(pixel(x, y), options[:tolerance]) do
+        return false if (Time.now - start_time) * 1000 >= options[:timeout]
+        sleep(options[:period] * 0.001)
       end
       return true
     end
 
-    def self.wait_for_px_not x, y, color, tolerance=5, timeout=100, ms_per_screenshot=50
-      wait_for_px x, y, color, tolerance, timeout, ms_per_screenshot, false
+    def self.wait_for_not xy, color, options={}
+      wait_for xy, color, options, false
     end
 
     def self.method_missing(m, *args, &block)

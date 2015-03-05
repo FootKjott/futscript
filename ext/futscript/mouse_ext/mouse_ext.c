@@ -22,7 +22,7 @@ void Init_mouse_ext() {
 	Mouse = rb_define_class_under(Futscript, "Mouse", rb_cObject);
 	rb_define_module_function(Mouse, "set_raw_position", mouse_set_position, 2);
 	rb_define_module_function(Mouse, "raw_position", mouse_get_position, 0);
-	rb_define_module_function(Mouse, "move_relative", mouse_move_relative, 2);
+	rb_define_module_function(Mouse, "teleport_relative_unpolled", mouse_move_relative, 2);
 	rb_define_module_function(Mouse, "event", mouse_event_wrapper, 4);
 	rb_define_module_function(Mouse, "hook", set_mouse_hook, 1);
 }

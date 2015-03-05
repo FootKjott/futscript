@@ -20,7 +20,7 @@ void Init_screen_ext() {
 	user_hdc = CreateDC("DISPLAY", NULL, NULL, NULL);
 
 	rb_define_module_function(Screen, "get_pixel_ext", get_pixel_wrapper, 2);
-	//rb_define_module_function(Screen, "capture_area", screen_capture_area, 4);
+	rb_define_module_function(Screen, "capture_area", screen_capture_area, 4);
 	
 	rb_cv_set(Screen, "@@offset_x", INT2NUM(GetSystemMetrics(76)));
 	rb_cv_set(Screen, "@@offset_y", INT2NUM(GetSystemMetrics(77)));
@@ -43,9 +43,8 @@ VALUE screen_capture_area(VALUE self, VALUE v_x, VALUE v_y, VALUE v_width, VALUE
 	BITMAPINFO bmi;
 	char* data;
 	VALUE argv[4];
-	HDC hdc = CreateDC("DISPLAY", NULL, NULL, NULL);
-	HDC hdc_dest = CreateCompatibleDC(hdc);
-	HBITMAP h_bitmap = CreateCompatibleBitmap(hdc, width, height);
+	HDC hdc_dest = CreateCompatibleDC(user_hdc);
+	HBITMAP h_bitmap = CreateCompatibleBitmap(user_hdc, width, height);
 
 	bmi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
 	bmi.bmiHeader.biWidth = width;
@@ -54,7 +53,7 @@ VALUE screen_capture_area(VALUE self, VALUE v_x, VALUE v_y, VALUE v_width, VALUE
 	bmi.bmiHeader.biBitCount = 24;
 	bmi.bmiHeader.biCompression = 0;
 	SelectObject(hdc_dest, h_bitmap);
-	BitBlt(hdc_dest, 0, 0, width, height, hdc, x + GetSystemMetrics(76),
+	BitBlt(hdc_dest, 0, 0, width, height, user_hdc, x + GetSystemMetrics(76),
 		y + GetSystemMetrics(77), 0x40000000 | 0x00CC0020);
 	GetDIBits(hdc_dest, h_bitmap, 0, height, NULL, &bmi, DIB_RGB_COLORS);
 

@@ -13,7 +13,11 @@ module Futscript
       Image.new(bmi[1], bmi[2], bmi[6], bitmap_data)
     end
 
-    def get_pixel x, y
+    def pixel x, y=nil
+      if y.nil?
+        y = x[1]
+        x = x[0]
+      end
       y = @height - y - 1
       raise "Invalid coordinates" unless (0...@width).include?(x) && (0...@height).include?(y)
       colorref = @data[(y * @width + x) * 3, 3].unpack('CCC')
@@ -24,16 +28,9 @@ module Futscript
       color = Color.parse color
       (0...@width).each do |x|
         (0...@height).each do |y|
-          return [x, y] if color.is_tolerant_of(get_pixel(x, y), tolerance)
+          return [x, y] if color.tolerant_of?(pixel(x, y), tolerance)
         end
       end
-    end
-
-    def destroy
-      @width = 0
-      @height = 0
-      @size = 0
-      @data = nil
     end
   end
 end

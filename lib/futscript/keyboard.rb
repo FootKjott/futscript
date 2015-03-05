@@ -35,17 +35,56 @@ module Futscript
     @@keys["PRTSCN"] = 0x2C
     @@keys["DELETE"] = 0x2E
 
-    attr_accessor :keys
-
     @@hotkeys = Hash.new
 
     @@hotkey_thread = nil
 
+    @@polled = true
+    @@polling_rate = 200.0
+    @@polling_period = 1.0 / @@polling_rate
+
+    def self.parse_key key_code
+      case key_code
+      when Integer
+        key_code
+      when Symbol
+        @@keys[key_code]
+      when String
+        @@keys[key_code]
+      else
+        raise "Invalid key_code type"
+      end
+    end
+
     def self.hotkeys
       @@hotkeys
     end
+    
+    def self.polled
+      @@polled
+    end
 
-    def self.type str, speed=1.2
+    def self.polled= value
+      @@polled = value
+    end
+    
+    def self.polling_rate
+      @polling_rate
+    end
+
+    def self.polling_rate= value
+      @polling_rate = value
+      @@polling_period = 1.0 / value
+    end
+
+    def self.wait_for_poll
+      return unless @@polled
+      time_f = Time.now.to_f
+      poll_count = time_f / @@polling_period
+      sleep(@@polling_period - (poll_count - poll_count.to_i) * @@polling_period)
+    end
+
+    def self.type str, wait_sec=0.1033, std_deviation=0.0231
       shift_down = false
       str.chars.each do |char|
         unless @@keys[char].nil?
@@ -60,8 +99,8 @@ module Futscript
               shift_down = false
             end
           end
-          tap_key @@keys[char] % 256, 0.1**speed
-          sleep(0.1**speed)
+          tap_key @@keys[char] % 256, wait_sec.distribute(std_deviation)
+          sleep(wait_sec.distribute(std_deviation))
         end
       end
       if shift_down
@@ -69,27 +108,28 @@ module Futscript
       end
     end
 
-    def self.tap_key key_code, ms=0
+    def self.tap_key key_code, sec=0.0
       key key_code, :down
-      sleep ms*0.001
+      sleep sec
       key key_code, :up
     end
 
     # Key codes: http://msdn.microsoft.com/en-us/library/windows/desktop/dd375731%28v=vs.85%29.aspx
     def self.key key_code, action
-      case key_code
-      when Integer
-        key_code = key_code
-      when Symbol
-        key_code = @@keys[key_code]
-      when String
-        key_code = @@keys[key_code]
-      else
-        raise "Invalid key_code type"
-      end
-      raise "Invalid key_code value" if key_code.nil?
+      key_code = parse_key key_code
+      
       raise "Invalid key action type" if @@keybd_events[action].nil?
       self.event(key_code, @@keybd_events[action])
+    end
+
+    def self.key_down? key_code
+      key_code = parse_key key_code
+      keycode_down? key_code
+    end
+
+    def self.key_was_down? key_code
+      key_code = parse_key key_code
+      keycode_was_down? key_code
     end
 
     def self.start_message_loop
