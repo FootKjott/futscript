@@ -31,6 +31,18 @@ module Futscript
           return [x, y] if color.tolerant_of?(pixel(x, y), tolerance)
         end
       end
+      nil
+    end
+
+    def count color, tolerance=0
+      count = 0
+      color = Color.parse color
+      (0...@width).each do |x|
+        (0...@height).each do |y|
+          count += 1 if color.tolerant_of?(pixel(x, y), tolerance)
+        end
+      end
+      count
     end
   end
 end

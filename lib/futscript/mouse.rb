@@ -69,6 +69,7 @@ module Futscript
       i = 0
       loop do
         suitable_paths = @@paths.select { |p| 
+          p['path'].length > 0 &&
           tolerant?(dx.abs, p['destination']['x'], tolerance) &&
           tolerant?(dy.abs, p['destination']['y'], tolerance)
         }
@@ -77,7 +78,6 @@ module Futscript
 
         tolerance *= 1.2
         i += 1
-        puts suitable_paths.count
         break unless (suitable_paths.count < 10 && !(tolerance > 4 && suitable_paths.count > 0))
       end
 
@@ -132,6 +132,26 @@ module Futscript
 
     def self.tolerant? dest, path_dest, tolerance=0.25
       (dest - dest * (tolerance / 4) - 5 <= path_dest) && (path_dest <= dest + dest * tolerance + 5)
+    end
+
+    def self.ensured_move x_range, y_range
+      if x_range.is_a?(Array) && y_range.is_a?(Array)
+        x1y1 = x_range
+        x2y2 = y_range
+        x_range = x1y1[0]..x2y2[0]
+        y_range = x1y1[1]..x2y2[1]
+      end
+      until x_range.include?(Mouse.position[0]) && y_range.include?(Mouse.position[1]) do
+        Mouse.move Random.normal(x_range), Random.normal(y_range)
+        sleep(0.05212.distribute 0.0131)
+      end
+    end
+   
+    def self.ensured_move_relative dx_range, dy_range
+      pos = Mouse.position
+      x_range = (pos[0] + dx_range.min)..(pos[0] + dx_range.max)
+      y_range = (pos[1] + dy_range.min)..(pos[1] + dy_range.max)
+      ensured_move x_range, y_range
     end
 
     def self.left_click sec=0.0

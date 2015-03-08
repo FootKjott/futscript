@@ -2,7 +2,7 @@ require 'futscript/screen_ext/screen_ext'
 
 module Futscript
   class Screen
-    @@defaults = { tolerance: 5, timeout: 10000, period: 50 }
+    @@defaults = { tolerance: 5, timeout: 10, period: 0.050 }
 
     def self.defaults
       @@defaults
@@ -48,8 +48,8 @@ module Futscript
       color = Color.parse color
       start_time = Time.now
       until is == color.tolerant_of?(pixel(x, y), options[:tolerance]) do
-        return false if (Time.now - start_time) * 1000 >= options[:timeout]
-        sleep(options[:period] * 0.001)
+        return false if (Time.now - start_time) >= options[:timeout]
+        sleep(options[:period])
       end
       return true
     end
